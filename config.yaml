@@ -64,15 +64,10 @@ tasks:
       domains = new_domains
       print(f"  -> 清洗完成，处理后数量: {len(domains)}")
 
-  cn:
+  SteamCN:
     format: "mrs"
     src:
-      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/cn.list"
-      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list"
-      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/microsoft@cn.list"
-      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/google@cn.list"
-      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/win-update.list"
-      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/private.list"
+      - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/SteamCN/SteamCN.list"
     # 自定义清洗脚本
     # 在这里编写 Python 代码，变量名 'domains' 是一个列表，包含了当前所有的域名行
     custom_script: |

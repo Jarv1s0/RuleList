@@ -94,7 +94,6 @@ output_dir=$(yq -r '.output_dir' "$config_file")
 rm -rf "$output_dir" || true
 mkdir -p "$output_dir"
 
-
 echo "开始处理任务..."
 # 遍历 tasks 下的所有键名
 task_names=$(yq -r '.tasks | keys | .[]' "$config_file")
@@ -131,9 +130,6 @@ for task in $task_names; do
 
         if [[ "$filename" == "pihole.txt" ]]; then
             echo "   -> 检测到 pihole.txt，正在添加 (+.) 前缀..."
-            # 逻辑说明：
-            # s/^/+./  : 将行首 (^) 替换为 (+.)
-            # 仅对不以 # 开头的行操作，防止破坏注释
             sed -i '/^[a-zA-Z0-9]/ s/^/+./' "$download_path"
         fi
 
@@ -145,8 +141,18 @@ for task in $task_names; do
     done
 
     output_file="$output_dir/${task}.txt"
-    echo "字典序排序、去重 (智能语义过滤)"
+    echo "清理格式、处理 Classical 规则前缀 (Domain & IP)..."
+    
+    # 1. 优先删除前导/尾随空格，删除注释和空行
     sed -i -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' -e 's/^[[:space:]]*//;s/[[:space:]]*$//' "$work_dir/tmp.txt"
+    
+    # 2. 转换 Classical 格式，提取中间的 payload 并安全剥离尾部策略名
+    # 将 DOMAIN-SUFFIX,google.com,Proxy 转换为 +.google.com
+    sed -i -E 's/^(DOMAIN-SUFFIX)[,:]([^,]+).*/+.\2/gi' "$work_dir/tmp.txt"
+    # 将 DOMAIN,google.com,Proxy 转换为 google.com
+    sed -i -E 's/^(DOMAIN)[,:]([^,]+).*/\2/gi' "$work_dir/tmp.txt"
+    # 将 IP-CIDR,1.1.1.0/24,no-resolve 转换为 1.1.1.0/24
+    sed -i -E 's/^(IP-CIDR6?)[,:]([^,]+).*/\2/gi' "$work_dir/tmp.txt"
 
     # 读取第一行用于判断类型
     first_line=$(head -n 1 "$work_dir/tmp.txt")
@@ -173,24 +179,18 @@ try:
             line = line.strip()
             if not line: continue
             try:
-                # strict=False 允许非规范写法，例如 192.168.1.5/24 会自动修正为网段地址 192.168.1.0/24
+                # strict=False 允许非规范写法
                 net = ipaddress.ip_network(line, strict=False)
                 if net.version == 4:
                     ipv4_nets.append(net)
                 else:
                     ipv6_nets.append(net)
             except ValueError:
-                # 遇到非 IP 格式的行（可能是误判的域名），静默跳过或打印警告
-                # print(f"忽略无效 IP: {line}")
                 pass
 
-    # 核心逻辑：collapse_addresses 会自动去除包含关系并合并相邻网段
-    # 例如：1.1.1.1/32 被包含在 1.1.1.0/24 中，前者会被移除
-    # 例如：1.0.0.0/25 和 1.0.0.128/25 会被合并为 1.0.0.0/24
     merged_v4 = list(ipaddress.collapse_addresses(ipv4_nets))
     merged_v6 = list(ipaddress.collapse_addresses(ipv6_nets))
 
-    # 排序
     merged_v4.sort()
     merged_v6.sort()
 
@@ -208,7 +208,6 @@ except Exception as e:
     print(f"发生未知错误: {e}")
     sys.exit(1)
 EOF
-        # 检查 Python 退出代码
         if [ $? -eq 0 ]; then
             echo "生成文件: $output_file (总行数: $(wc -l < "$output_file"))"
         else
@@ -226,14 +225,15 @@ import sys
 import re
 import os
 from collections import defaultdict
+
 input_path = sys.argv[1]
 output_path = sys.argv[2]
 print(f"Python (域名模式) 正在读取: {input_path}")
+
 def get_clean_domain(domain_str):
-    # 去除 +. *. . 等前缀，只保留纯域名用于逻辑判断
     return re.sub(r'^[\+\*\.]+', '', domain_str)
+
 try:
-    # 1. 读取文件
     raw_lines = []
     with open(input_path, 'r', encoding='utf-8') as f:
         for line in f:
@@ -241,25 +241,20 @@ try:
             if line:
                 raw_lines.append(line)
     
-    # 2. 基础去重与排序 (父子域名逻辑)
-    # 先按长度排序
     raw_lines.sort()
     raw_lines.sort(key=lambda x: len(get_clean_domain(x)))
 
-    # 4. 智能去重逻辑    
     roots = set()
-    domains = [] # 这个变量将暴露给自定义脚本使用
+    domains = [] 
     
     for line in raw_lines:
         clean_domain = get_clean_domain(line)
         parts = clean_domain.split('.')
         is_redundant = False
         
-        # 自身查重
         if clean_domain in roots:
             is_redundant = True
         else:
-            # 父级查重
             for i in range(1, len(parts)):
                 parent = ".".join(parts[i:])
                 if parent in roots:
@@ -269,49 +264,42 @@ try:
         if not is_redundant:
             domains.append(line)
             roots.add(clean_domain)
-    # 执行 YAML 中的自定义脚本
+
     custom_code = os.environ.get('CUSTOM_SCRIPT', '')
     if custom_code and custom_code.strip() != "":
         try:
-            # 使用 exec 执行字符串代码，传入 domains 变量
-            # 用户在 YAML 中可以直接操作 domains 列表
             exec_globals = {}
             exec_locals = {'domains': domains, 're': re}
             exec(custom_code, exec_globals, exec_locals)
-            
-            #以此取回修改后的列表
             domains = exec_locals['domains']
             print(f"  -> 自定义脚本执行完毕")
         except Exception as e:
             print(f"  -> [警告] 自定义脚本执行失败: {e}")
-            # 即使脚本失败，也继续往下走，不要中断整个流程
-    # 泛滥子域检测警告
-    # 逻辑：取域名的后缀（去掉第一段），统计出现次数
+
     suffix_counter = defaultdict(int)
     for line in domains:
         clean = get_clean_domain(line)
         parts = clean.split('.')
 
-        # 如果域名层级少于 4，跳过检查
         if len(parts) < 4:
             continue
-        # 获取父级域名（去掉最左边的一段）
         suffix = ".".join(parts[1:])
         suffix_counter[suffix] += 1
     
     warned = False
     sorted_suffixes = sorted(suffix_counter.items(), key=lambda x: x[1], reverse=True)
     for suffix, count in sorted_suffixes:
-        if count >= 17: # 阈值可调整
+        if count >= 17:
             if not warned:
                 print("  -> [注意] 检测到以下后缀包含大量子域名:")
                 warned = True
             print(f"     Suffix: .{suffix} (包含 {count} 个条目)")
-    # 5. 写入文件
+
     print(f"Python (域名模式) 正在写入: {output_path}")
     with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
         f.write("\n".join(domains))
         f.write("\n")
+
 except FileNotFoundError:
     print(f"错误: 找不到文件 {input_path}")
     sys.exit(1)
@@ -326,7 +314,6 @@ EOF
             exit 1
         fi
     fi
-
 
     need_mrs=$(yq -r ".tasks.$task.format" "$config_file" | grep -q "mrs" && echo "true" || echo "false")
     if [ "$need_mrs" == "true" ]; then
@@ -344,17 +331,16 @@ echo "---------------------------------------"
 release_branch=$(yq -r '.git.release_branch' "$config_file")
 max_history=$(yq -r '.git.max_history' "$config_file")
 echo "开始部署到分支: $release_branch"
-# 配置 Git 身份
+
 if [ -n "$GITHUB_TOKEN" ]; then
     git config --global user.name "$(yq -r '.git.user_name' "$config_file")"
     git config --global user.email "$(yq -r '.git.user_email' "$config_file")"
 fi
-# 这里的逻辑是：不在当前目录下操作，而是克隆一个干净的 release 分支到 temp_repo 目录
+
 temp_repo="$work_dir/temp_repo"
 rm -rf "$temp_repo" || true
-# 获取当前仓库的远程地址
 remote_url=$(git config --get remote.origin.url)
-# 克隆 release 分支 (如果不存在则创建空目录)
+
 echo "正在克隆/初始化目标分支..."
 if git clone -q --filter=blob:none --branch "$release_branch" "$remote_url" "$temp_repo" 2>/dev/null; then
     echo "成功拉取远程分支 $release_branch"
@@ -367,57 +353,43 @@ else
     git remote add origin "$remote_url"
     cd - > /dev/null
 fi
-# 复制生成的文件到 git 目录
-# 先删除 git 目录里除了 .git 以外的所有文件，确保删除旧规则
+
 find "$temp_repo" -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
 cp -r "$output_dir"/* "$temp_repo/"
-# 进入 Git 目录进行操作
 cd "$temp_repo"
-# 检查是否有变化
+
 git add .
 if git diff --staged --quiet; then
     echo "规则无变化，跳过提交和推送。"
     exit 0
 fi
-# 提交
+
 git commit -m "Auto Update: $(date '+%Y-%m-%d %H:%M:%S')"
-# 核心逻辑：检查提交数量
 commit_count=$(git rev-list --count HEAD)
 echo "当前分支提交数量: $commit_count (上限: $max_history)"
+
 if [ "$commit_count" -gt "$max_history" ]; then
     echo "触发历史清理机制..."
-    # 逻辑：创建一个新的孤儿分支，包含当前文件的最新状态，然后强制覆盖 release
-    # 1. 切换到临时孤儿分支
     git checkout --orphan temp_reset_branch
-    # 2. 添加当前所有文件
     git add .
-    # 3. 提交
     git commit -m "Reset History: $(date '+%Y-%m-%d') (Cleaned up old commits)"
-    # 4. 删除旧的 release 指针
     git branch -D "$release_branch"
-    # 5. 重命名当前分支为 release
     git branch -m "$release_branch"
-    # 6. 标记需要强制推送
     push_args="--force"
     echo "历史已重置为 1 条提交。"
 else
     push_args=""
     echo "历史数量在允许范围内，正常推送。"
 fi
-# 推送
-# 在 GitHub Actions 中，需要使用 Token 进行身份验证
-# 我们将 remote url 修改为带 Token 的格式
-# 注意：$GITHUB_TOKEN 必须在 workflow 的 env 中传入
+
 if [ -n "$GITHUB_TOKEN" ]; then
-    # 替换 origin URL，加入 token
-    # 格式: https://x-access-token:TOKEN@github.com/user/repo.git
-    # 这里的 sed 会替换 https://github.com... 
     origin_url=$(git remote get-url origin)
     auth_url=$(echo "$origin_url" | sed "s/https:\/\//https:\/\/x-access-token:$GITHUB_TOKEN@/")
     git remote set-url origin "$auth_url"
 else
     echo "警告: GITHUB_TOKEN 未设置，推送可能失败！"
 fi
+
 echo "正在推送到 GitHub..."
 git push $push_args origin "$release_branch"
 echo "完成！"

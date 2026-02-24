@@ -68,6 +68,7 @@ tasks:
     format: "mrs"
     src:
       - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/SteamCN/SteamCN.list"
+      - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list"
     # 自定义清洗脚本
     # 在这里编写 Python 代码，变量名 'domains' 是一个列表，包含了当前所有的域名行
     custom_script: |

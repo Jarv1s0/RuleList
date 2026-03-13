@@ -328,68 +328,46 @@ echo "---------------------------------------"
 echo "所有任务处理完成！"
 echo "---------------------------------------"
 
-release_branch=$(yq -r '.git.release_branch' "$config_file")
 max_history=$(yq -r '.git.max_history' "$config_file")
-echo "开始部署到分支: $release_branch"
+rules_dir="rules"
+
+echo "开始部署规则到本地目录: $rules_dir"
 
 if [ -n "$GITHUB_TOKEN" ]; then
     git config --global user.name "$(yq -r '.git.user_name' "$config_file")"
     git config --global user.email "$(yq -r '.git.user_email' "$config_file")"
 fi
 
-temp_repo="$work_dir/temp_repo"
-rm -rf "$temp_repo" || true
-remote_url=$(git config --get remote.origin.url)
+# 确保 rules 目录存在并清理旧内容
+mkdir -p "$rules_dir"
+find "$rules_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
-echo "正在克隆/初始化目标分支..."
-if git clone -q --filter=blob:none --branch "$release_branch" "$remote_url" "$temp_repo" 2>/dev/null; then
-    echo "成功拉取远程分支 $release_branch"
-else
-    echo "远程分支不存在，初始化新仓库"
-    mkdir -p "$temp_repo"
-    cd "$temp_repo"
-    git init
-    git checkout -b "$release_branch"
-    git remote add origin "$remote_url"
-    cd - > /dev/null
-fi
+# 复制新规则
+cp -r "$output_dir"/* "$rules_dir/"
 
-find "$temp_repo" -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
-cp -r "$output_dir"/* "$temp_repo/"
-cd "$temp_repo"
+echo "正在准备 Git 提交..."
+git add "$rules_dir"
 
-git add .
 if git diff --staged --quiet; then
     echo "规则无变化，跳过提交和推送。"
     exit 0
 fi
 
-git commit -m "Auto Update: $(date '+%Y-%m-%d %H:%M:%S')"
-commit_count=$(git rev-list --count HEAD)
-echo "当前分支提交数量: $commit_count (上限: $max_history)"
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+git commit -m "Auto Update Rules: $(date '+%Y-%m-%d %H:%M:%S')"
 
-if [ "$commit_count" -gt "$max_history" ]; then
-    echo "触发历史清理机制..."
-    git checkout --orphan temp_reset_branch
-    git add .
-    git commit -m "Reset History: $(date '+%Y-%m-%d') (Cleaned up old commits)"
-    git branch -D "$release_branch"
-    git branch -m "$release_branch"
-    push_args="--force"
-    echo "历史已重置为 1 条提交。"
-else
-    push_args=""
-    echo "历史数量在允许范围内，正常推送。"
-fi
+commit_count=$(git rev-list --count HEAD)
+echo "当前分支提交数量: $commit_count (历史限制参考: $max_history)"
+
+# 注意：这里暂不自动执行 --orphan 重置，以保护主分支代码历史。
+# 如果用户确实需要清理主分支历史，建议手动执行或通过专门的清理脚本。
 
 if [ -n "$GITHUB_TOKEN" ]; then
     origin_url=$(git remote get-url origin)
     auth_url=$(echo "$origin_url" | sed "s/https:\/\//https:\/\/x-access-token:$GITHUB_TOKEN@/")
     git remote set-url origin "$auth_url"
-else
-    echo "警告: GITHUB_TOKEN 未设置，推送可能失败！"
 fi
 
-echo "正在推送到 GitHub..."
-git push $push_args origin "$release_branch"
-echo "完成！"
+echo "正在推送到 GitHub 分支: $current_branch"
+git push origin "$current_branch"
+echo "部署完成！"

@@ -12,7 +12,6 @@ mihomo:
 git:
   user_email: "259484229+oom-wg[bot]@users.noreply.github.com"
   user_name: "oom-wg[bot]"
-  release_branch: "release"
   max_history: 7
   timezone: "Asia/Shanghai"
 
@@ -63,7 +62,7 @@ tasks:
   SteamCN:
     format: "mrs"
     src:
-      - "https://raw.githubusercontent.com/Jarv1s0/Logic/refs/heads/master/Clash/rules/SteamCN.yaml"
+      - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list"
       - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list"
     custom_script: |
       print(f"  -> 执行 SteamCN 规则检查，处理前数量: {len(domains)}")

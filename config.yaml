@@ -31,7 +31,7 @@ tasks:
       ".p2l.info": "+.p2l.info"
       ".apps.iocnt.de": "+.apps.iocnt.de"
     exclude_regex: # 正则排除
-      - "^\+\.data-.*\.apps\.iocnt\.de$"
+      - '^\+\.data-.*\.apps\.iocnt\.de$'
 
   SteamCN:
     format: "mrs"

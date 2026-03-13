@@ -219,40 +219,37 @@ EOF
         echo "类型：域名列表"
         behavior="domain"
 
-        # 让 Python 全权负责：读取 -> 清洗 -> 逻辑去重 -> 写入
-        python3 - "$work_dir/tmp.txt" "$output_file" <<-'EOF'
+        # 让 Python 全权负责：读取 -> 转换 -> 过滤 -> 最终去重 -> 写入
+        python3 - "$work_dir/tmp.txt" "$output_file" "$config_file" "$task" <<-'EOF'
 import sys
 import re
 import os
+import yaml
 from collections import defaultdict
 
 input_path = sys.argv[1]
 output_path = sys.argv[2]
-print(f"Python (域名模式) 正在读取: {input_path}")
+config_path = sys.argv[3]
+task_name = sys.argv[4]
 
 def get_clean_domain(domain_str):
     return re.sub(r'^[\+\*\.]+', '', domain_str)
 
-try:
-    raw_lines = []
-    with open(input_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                raw_lines.append(line)
-    
-    raw_lines.sort()
+def deduplicate_domains(raw_lines):
+    """标准的父域名去重算法"""
+    # 按干净域名的长度排序，确保父域名先被处理
     raw_lines.sort(key=lambda x: len(get_clean_domain(x)))
-
+    
     roots = set()
-    domains = [] 
+    result = []
     
     for line in raw_lines:
-        clean_domain = get_clean_domain(line)
-        parts = clean_domain.split('.')
+        clean = get_clean_domain(line)
+        parts = clean.split('.')
         is_redundant = False
         
-        if clean_domain in roots:
+        # 检查自己或任何父域名是否已在 roots 中
+        if clean in roots:
             is_redundant = True
         else:
             for i in range(1, len(parts)):
@@ -262,47 +259,75 @@ try:
                     break
         
         if not is_redundant:
-            domains.append(line)
-            roots.add(clean_domain)
+            result.append(line)
+            roots.add(clean)
+    return result
 
-    custom_code = os.environ.get('CUSTOM_SCRIPT', '')
-    if custom_code and custom_code.strip() != "":
+try:
+    # 1. 加载配置
+    with open(config_path, 'r', encoding='utf-8') as f:
+        conf = yaml.safe_load(f)
+    task_conf = conf.get('tasks', {}).get(task_name, {})
+    
+    rewrite_conf = task_conf.get('rewrite', {}) or {}
+    exclude_list = task_conf.get('exclude', []) or []
+    exclude_regex = task_conf.get('exclude_regex', []) or []
+    custom_code = task_conf.get('custom_script', '') or ""
+
+    # 2. 读取原始数据
+    domains = []
+    with open(input_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line: domains.append(line)
+
+    print(f"Python (模式: {task_name}) 初始数量: {len(domains)}")
+
+    # 3. 处理 rewrite (修改或初步删除)
+    if rewrite_conf:
+        rewritten_domains = []
+        rewrite_suffixes = tuple(rewrite_conf.keys())
+        for d in domains:
+            matched = False
+            for s in rewrite_suffixes:
+                if d.endswith(s):
+                    replacement = rewrite_conf[s]
+                    if replacement: # 如果有替换值，则替换
+                        rewritten_domains.append(replacement)
+                    # 如果为 null (None)，则匹配到后不加入结果，相当于删除
+                    matched = True
+                    break
+            if not matched:
+                rewritten_domains.append(d)
+        domains = rewritten_domains
+
+    # 4. 处理 exclude (后缀匹配或完整匹配)
+    if exclude_list:
+        exclude_tuple = tuple(exclude_list)
+        domains = [d for d in domains if not (d in exclude_list or d.endswith(exclude_tuple))]
+
+    # 5. 处理 exclude_regex
+    if exclude_regex:
+        regex_patterns = [re.compile(p) for p in exclude_regex]
+        domains = [d for d in domains if not any(p.search(d) for p in regex_patterns)]
+
+    # 6. 执行旧有的自定义脚本 (如果仍然存在)
+    if custom_code and custom_code.strip():
         try:
-            exec_globals = {}
             exec_locals = {'domains': domains, 're': re}
-            exec(custom_code, exec_globals, exec_locals)
+            exec(custom_code, {}, exec_locals)
             domains = exec_locals['domains']
-            print(f"  -> 自定义脚本执行完毕")
         except Exception as e:
             print(f"  -> [警告] 自定义脚本执行失败: {e}")
 
-    suffix_counter = defaultdict(int)
-    for line in domains:
-        clean = get_clean_domain(line)
-        parts = clean.split('.')
+    # 7. 最终去重 (核心：确保所有来源的规则都经过一致性去重)
+    domains = deduplicate_domains(domains)
+    print(f"  -> 处理后最终数量: {len(domains)}")
 
-        if len(parts) < 4:
-            continue
-        suffix = ".".join(parts[1:])
-        suffix_counter[suffix] += 1
-    
-    warned = False
-    sorted_suffixes = sorted(suffix_counter.items(), key=lambda x: x[1], reverse=True)
-    for suffix, count in sorted_suffixes:
-        if count >= 17:
-            if not warned:
-                print("  -> [注意] 检测到以下后缀包含大量子域名:")
-                warned = True
-            print(f"     Suffix: .{suffix} (包含 {count} 个条目)")
-
-    print(f"Python (域名模式) 正在写入: {output_path}")
+    # 8. 写入文件
     with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
-        f.write("\n".join(domains))
-        f.write("\n")
+        f.write("\n".join(domains) + "\n")
 
-except FileNotFoundError:
-    print(f"错误: 找不到文件 {input_path}")
-    sys.exit(1)
 except Exception as e:
     print(f"发生未知错误: {e}")
     sys.exit(1)

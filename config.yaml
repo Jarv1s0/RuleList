@@ -24,59 +24,26 @@ tasks:
       - "https://github.com/Cats-Team/AdRules/raw/refs/heads/main/adrules_domainset.txt"
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-httpdns-cn@ads.list"
       - "https://github.com/ignaciocastro/a-dove-is-dumb/raw/refs/heads/main/pihole.txt"
-    custom_script: |
-      print(f"  -> 执行自定义 AD 清洗，处理前数量: {len(domains)}")
-
-      rules_map = {
-          ".xx.fbcdn.net.iberostar.com": "+.xx.fbcdn.net.iberostar.com",
-          ".wns.windows.com":            "+.wns.windows.com",
-          ".p2l.info":                   "+.p2l.info",
-          ".wo.com.cn":                  None,
-          ".apps.iocnt.de":              "+.apps.iocnt.de"
-      }
-      
-      # 将字典的 keys 转换为元组，供 endswith 底层 C 加速匹配
-      check_suffixes = tuple(rules_map.keys())
-      new_domains = []
-
-      for d in domains:
-          # 1. 特殊正则逻辑
-          if d.startswith("+.data-") and d.endswith(".apps.iocnt.de"):
-              continue
-          
-          # 2. 批量后缀匹配 (由于传入的是元组，只需 O(1) 级别的底层调用)
-          if d.endswith(check_suffixes):
-              continue
-              
-          # 3. 未被拦截的域名保留
-          new_domains.append(d)
-
-      # 4. 统一补回泛域名规则
-      for replacement in rules_map.values():
-          if replacement:
-              new_domains.append(replacement)
-
-      domains = new_domains
-      print(f"  -> 清洗完成，处理后数量: {len(domains)}")
+    rewrite: # 重写逻辑 (键为后缀，值为替换值，null 代表删除)
+      ".wo.com.cn": null
+      ".wns.windows.com": "+.wns.windows.com"
+      ".xx.fbcdn.net.iberostar.com": "+.xx.fbcdn.net.iberostar.com"
+      ".p2l.info": "+.p2l.info"
+      ".apps.iocnt.de": "+.apps.iocnt.de"
+    exclude_regex: # 正则排除
+      - "^\+\.data-.*\.apps\.iocnt\.de$"
 
   SteamCN:
     format: "mrs"
     src:
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list"
       - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list"
-    custom_script: |
-      print(f"  -> 执行 SteamCN 规则检查，处理前数量: {len(domains)}")
-      
-      # 移除不属于 Steam 体系的微软相关/脏规则残留（如果源中有的话）
-      # 这里使用单次遍历清理，不增加额外内存开销
-      dirty_keywords = ("dsp.mp.microsoft.com", ".wns.windows.com", ".100.in-addr.arpa", ".download.prss.microsoft.com")
-      
-      domains = [d for d in domains if not d.endswith(dirty_keywords) and "dsp.mp.microsoft.com" not in d and d != "+.steamusercontent.com"]
-      
-      # 补充你认为 SteamCN 必须有的遗漏规则 (按需填写)
-      # domains.append("+.steamcontent.com")
-
-      print(f"  -> 清理完成，处理后数量: {len(domains)}")
+    exclude: # 排除规则 (完整匹配或后缀匹配)
+      - "+.steamusercontent.com"
+      - ".dsp.mp.microsoft.com"
+      - ".wns.windows.com"
+      - ".100.in-addr.arpa"
+      - ".download.prss.microsoft.com"
 
   cnIP:
     format: "mrs"

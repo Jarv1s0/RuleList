@@ -1,8 +1,8 @@
 +.csgo.wmsj.cn
 +.dota2.wmsj.cn
 +.wmsjsteam.com
-+.steamchina.com
 lv.queniujq.cn
++.steamchina.com
 +.steamserver.net
 +.st.dl.eccdnx.com
 +.dl.steam.clngaa.com

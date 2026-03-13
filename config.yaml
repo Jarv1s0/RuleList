@@ -72,7 +72,7 @@ tasks:
       # 这里使用单次遍历清理，不增加额外内存开销
       dirty_keywords = ("dsp.mp.microsoft.com", ".wns.windows.com", ".100.in-addr.arpa", ".download.prss.microsoft.com")
       
-      domains = [d for d in domains if not d.endswith(dirty_keywords) and "dsp.mp.microsoft.com" not in d]
+      domains = [d for d in domains if not d.endswith(dirty_keywords) and "dsp.mp.microsoft.com" not in d and d != "+.steamusercontent.com"]
       
       # 补充你认为 SteamCN 必须有的遗漏规则 (按需填写)
       # domains.append("+.steamcontent.com")

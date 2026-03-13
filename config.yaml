@@ -38,6 +38,7 @@ tasks:
     src:
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list"
       - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list"
+      - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/SteamCN/SteamCN.yaml"
     exclude: # 排除规则 (完整匹配或后缀匹配)
       - "+.steamusercontent.com"
       - ".dsp.mp.microsoft.com"

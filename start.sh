@@ -219,18 +219,20 @@ EOF
         echo "类型：域名列表"
         behavior="domain"
 
+        # 使用 yq 将任务配置转为 JSON 并导出
+        # 提取当前任务的配置并转为 JSON
+        task_json=$(yq -o=json ".tasks.$task" "$config_file" -c)
+        export TASK_CONFIG_JSON="$task_json"
+
         # 让 Python 全权负责：读取 -> 转换 -> 过滤 -> 最终去重 -> 写入
-        python3 - "$work_dir/tmp.txt" "$output_file" "$config_file" "$task" <<-'EOF'
+        python3 - "$work_dir/tmp.txt" "$output_file" <<-'EOF'
 import sys
 import re
 import os
-import yaml
-from collections import defaultdict
+import json
 
 input_path = sys.argv[1]
 output_path = sys.argv[2]
-config_path = sys.argv[3]
-task_name = sys.argv[4]
 
 def get_clean_domain(domain_str):
     return re.sub(r'^[\+\*\.]+', '', domain_str)
@@ -264,10 +266,9 @@ def deduplicate_domains(raw_lines):
     return result
 
 try:
-    # 1. 加载配置
-    with open(config_path, 'r', encoding='utf-8') as f:
-        conf = yaml.safe_load(f)
-    task_conf = conf.get('tasks', {}).get(task_name, {})
+    # 1. 从环境变量加载 JSON 配置 (无需 yaml 模块)
+    task_conf_str = os.environ.get('TASK_CONFIG_JSON', '{}')
+    task_conf = json.loads(task_conf_str)
     
     rewrite_conf = task_conf.get('rewrite', {}) or {}
     exclude_list = task_conf.get('exclude', []) or []
@@ -276,16 +277,16 @@ try:
 
     # 2. 读取原始数据
     domains = []
-    with open(input_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line: domains.append(line)
-
-    print(f"Python (模式: {task_name}) 初始数量: {len(domains)}")
+    if os.path.exists(input_path):
+        with open(input_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line: domains.append(line)
 
     # 3. 处理 rewrite (修改或初步删除)
     if rewrite_conf:
         rewritten_domains = []
+        # 注意：json.loads 后的 key 即使是 null 也会是 None
         rewrite_suffixes = tuple(rewrite_conf.keys())
         for d in domains:
             matched = False
@@ -294,7 +295,7 @@ try:
                     replacement = rewrite_conf[s]
                     if replacement: # 如果有替换值，则替换
                         rewritten_domains.append(replacement)
-                    # 如果为 null (None)，则匹配到后不加入结果，相当于删除
+                    # 如果 replacement 为 None (null)，则相当于删除
                     matched = True
                     break
             if not matched:
@@ -322,14 +323,13 @@ try:
 
     # 7. 最终去重 (核心：确保所有来源的规则都经过一致性去重)
     domains = deduplicate_domains(domains)
-    print(f"  -> 处理后最终数量: {len(domains)}")
 
     # 8. 写入文件
     with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
-        f.write("\n".join(domains) + "\n")
+        f.write("\n".join(domains) + ("\n" if domains else ""))
 
 except Exception as e:
-    print(f"发生未知错误: {e}")
+    print(f"Python 处理发生错误: {e}")
     sys.exit(1)
 EOF
         if [ $? -eq 0 ]; then

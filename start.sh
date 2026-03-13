@@ -220,8 +220,8 @@ EOF
         behavior="domain"
 
         # 使用 yq 将任务配置转为 JSON 并导出
-        # 提取当前任务的配置并转为 JSON
-        task_json=$(yq -o=json ".tasks.$task" "$config_file" -c)
+        # 移除 yq 不支持的 -c 参数（那是 jq 的参数），改用 -o=json 标志位前置
+        task_json=$(yq -o=json ".tasks[\"$task\"]" "$config_file")
         export TASK_CONFIG_JSON="$task_json"
 
         # 让 Python 全权负责：读取 -> 转换 -> 过滤 -> 最终去重 -> 写入

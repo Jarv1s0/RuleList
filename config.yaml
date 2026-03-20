@@ -12,12 +12,12 @@ mihomo:
 git:
   user_email: "259484229+oom-wg[bot]@users.noreply.github.com"
   user_name: "oom-wg[bot]"
-  max_history: 7
   timezone: "Asia/Shanghai"
 
 # 任务配置
 tasks:
   ad:
+    behavior: "domain"
     format: "mrs"
     src: 
       - "https://github.com/privacy-protection-tools/anti-AD/raw/refs/heads/master/anti-ad-clash.yaml"
@@ -34,6 +34,7 @@ tasks:
       - '^\+\.data-.*\.apps\.iocnt\.de$'
 
   SteamCN:
+    behavior: "domain"
     format: "mrs"
     src:
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list"
@@ -47,6 +48,7 @@ tasks:
       - ".download.prss.microsoft.com"
 
   cnIP:
+    behavior: "ipcidr"
     format: "mrs"
     src:
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/cn.list"

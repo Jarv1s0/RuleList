@@ -101,9 +101,25 @@ task_names=$(yq -r '.tasks | keys | .[]' "$config_file")
 for task in $task_names; do
     echo "---------------------------------------"
     echo "正在处理任务: $task"
+    rm -f "$work_dir/tmp.txt"
 
     # 获取该 task 的所有下载链接
     urls=$(yq -r ".tasks.$task.src[]" "$config_file")
+    behavior=$(yq -r ".tasks[\"$task\"].behavior // \"\"" "$config_file")
+
+    if [ -z "$behavior" ]; then
+        echo "错误: 任务 $task 未配置 behavior，请在 config.yaml 中显式指定 domain 或 ipcidr。"
+        exit 1
+    fi
+
+    case "$behavior" in
+        domain|ipcidr)
+            ;;
+        *)
+            echo "错误: 任务 $task 的 behavior=$behavior 不受支持，仅允许 domain 或 ipcidr。"
+            exit 1
+            ;;
+    esac
 
     # 如果 YAML 中没有 custom_script，yq 可能会返回 null，这里做处理
     custom_script_content=$(yq -r ".tasks.$task.custom_script" "$config_file")
@@ -154,13 +170,8 @@ for task in $task_names; do
     # 将 IP-CIDR,1.1.1.0/24,no-resolve 转换为 1.1.1.0/24
     sed -i -E 's/^(IP-CIDR6?)[,:]([^,]+).*/\2/gi' "$work_dir/tmp.txt"
 
-    # 读取第一行用于判断类型
-    first_line=$(head -n 1 "$work_dir/tmp.txt")
-
-    # 判断逻辑：如果包含 冒号(:) 或者 斜杠(/)，认为是 IP段
-    if [[ "$first_line" =~ [:/] ]]; then
-        echo "类型：IP/CIDR 网段 (启用语义合并)"
-        behavior="ipcidr"
+    if [ "$behavior" == "ipcidr" ]; then
+        echo "类型：IP/CIDR 网段 (由配置指定，启用语义合并)"
         # 使用 Python ipaddress 模块进行 CIDR 合并
         python3 - "$work_dir/tmp.txt" "$output_file" <<-'EOF'
 import sys
@@ -216,8 +227,7 @@ EOF
         fi
 
     else
-        echo "类型：域名列表"
-        behavior="domain"
+        echo "类型：域名列表 (由配置指定)"
 
         # 使用 yq 将任务配置转为 JSON 并导出
         # 移除 yq 不支持的 -c 参数（那是 jq 的参数），改用 -o=json 标志位前置
@@ -353,7 +363,6 @@ echo "---------------------------------------"
 echo "所有任务处理完成！"
 echo "---------------------------------------"
 
-max_history=$(yq -r '.git.max_history' "$config_file")
 rules_dir="rules"
 
 echo "开始部署规则到本地目录: $rules_dir"
@@ -382,7 +391,7 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 git commit -m "Auto Update Rules: $(date '+%Y-%m-%d %H:%M:%S')"
 
 commit_count=$(git rev-list --count HEAD)
-echo "当前分支提交数量: $commit_count (历史限制参考: $max_history)"
+echo "当前分支提交数量: $commit_count"
 
 # 注意：这里暂不自动执行 --orphan 重置，以保护主分支代码历史。
 # 如果用户确实需要清理主分支历史，建议手动执行或通过专门的清理脚本。

@@ -8,6 +8,7 @@ on:
   push:
     paths:
       - ".github/workflows/mrs.yml"
+      - "config.yaml"
       - "start.sh"
 
 jobs:
@@ -23,6 +24,15 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+
+      - name: 安装依赖
+        env:
+          YQ_VERSION: "v4.44.6"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bash curl jq wget gzip coreutils python3 ca-certificates
+          sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
 
       - name: 运行脚本
         run: |

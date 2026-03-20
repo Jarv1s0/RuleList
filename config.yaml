@@ -24,12 +24,13 @@ tasks:
       - "https://github.com/Cats-Team/AdRules/raw/refs/heads/main/adrules_domainset.txt"
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-httpdns-cn@ads.list"
       - "https://github.com/ignaciocastro/a-dove-is-dumb/raw/refs/heads/main/pihole.txt"
-    rewrite: # 重写逻辑 (键为后缀，值为替换值，null 代表删除)
-      ".wo.com.cn": null
+    rewrite: # 重写逻辑 (仅做替换；键为后缀，值为替换后的规则)
       ".wns.windows.com": "+.wns.windows.com"
       ".xx.fbcdn.net.iberostar.com": "+.xx.fbcdn.net.iberostar.com"
       ".p2l.info": "+.p2l.info"
       ".apps.iocnt.de": "+.apps.iocnt.de"
+    exclude: # 排除规则 (完整匹配或后缀匹配；统一承担删除逻辑)
+      - ".wo.com.cn"
     exclude_regex: # 正则排除
       - '^\+\.data-.*\.apps\.iocnt\.de$'
 
@@ -40,7 +41,7 @@ tasks:
       - "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list"
       - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list"
       - "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/SteamCN/SteamCN.yaml"
-    exclude: # 排除规则 (完整匹配或后缀匹配)
+    exclude: # 排除规则 (完整匹配或后缀匹配；统一承担删除逻辑)
       - "+.steamusercontent.com"
       - ".dsp.mp.microsoft.com"
       - ".wns.windows.com"

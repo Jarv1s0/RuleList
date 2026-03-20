@@ -281,9 +281,18 @@ try:
     task_conf = json.loads(task_conf_str)
     
     rewrite_conf = task_conf.get('rewrite', {}) or {}
-    exclude_list = task_conf.get('exclude', []) or []
+    exclude_list = list(task_conf.get('exclude', []) or [])
     exclude_regex = task_conf.get('exclude_regex', []) or []
     custom_code = task_conf.get('custom_script', '') or ""
+
+    # 统一配置语义：rewrite 只负责替换，删除统一放到 exclude。
+    # 这里做严格校验，避免把删除规则误写进 rewrite 后静默产生脏数据。
+    if rewrite_conf:
+        for suffix, replacement in rewrite_conf.items():
+            if replacement is None or not isinstance(replacement, str) or not replacement.strip():
+                raise ValueError(
+                    f"rewrite 配置非法: {suffix} 的替换值不能为空，请将删除规则写入 exclude"
+                )
 
     # 2. 读取原始数据
     domains = []
@@ -293,26 +302,23 @@ try:
                 line = line.strip()
                 if line: domains.append(line)
 
-    # 3. 处理 rewrite (修改或初步删除)
+    # 3. 处理 rewrite (仅负责后缀替换，不承担删除)
     if rewrite_conf:
         rewritten_domains = []
-        # 注意：json.loads 后的 key 即使是 null 也会是 None
         rewrite_suffixes = tuple(rewrite_conf.keys())
         for d in domains:
             matched = False
             for s in rewrite_suffixes:
                 if d.endswith(s):
                     replacement = rewrite_conf[s]
-                    if replacement: # 如果有替换值，则替换
-                        rewritten_domains.append(replacement)
-                    # 如果 replacement 为 None (null)，则相当于删除
+                    rewritten_domains.append(replacement)
                     matched = True
                     break
             if not matched:
                 rewritten_domains.append(d)
         domains = rewritten_domains
 
-    # 4. 处理 exclude (后缀匹配或完整匹配)
+    # 4. 处理 exclude (完整匹配或后缀匹配；统一承担删除)
     if exclude_list:
         exclude_tuple = tuple(exclude_list)
         domains = [d for d in domains if not (d in exclude_list or d.endswith(exclude_tuple))]

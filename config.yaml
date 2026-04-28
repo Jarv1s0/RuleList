@@ -10,8 +10,8 @@ mihomo:
 
 # Git 配置
 git:
-  user_email: "259484229+oom-wg[bot]@users.noreply.github.com"
-  user_name: "oom-wg[bot]"
+  user_email: "linkai0320@gmail.com"
+  user_name: "MiaoBot"
   timezone: "Asia/Shanghai"
 
 # 任务配置

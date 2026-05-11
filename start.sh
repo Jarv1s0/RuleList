@@ -453,7 +453,8 @@ cp "$output_dir/manifest.json" "$publish_worktree/manifest.json"
 (
     cd "$publish_worktree"
     echo "正在准备 Git 提交..."
-    git add "$rules_dir" README.md manifest.json artifacts-manifest.json
+    git rm -f --ignore-unmatch artifacts-manifest.json >/dev/null 2>&1 || true
+    git add "$rules_dir" README.md manifest.json
 
     if git diff --staged --quiet; then
         echo "规则无变化，跳过提交和推送。"

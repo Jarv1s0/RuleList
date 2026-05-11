@@ -86,32 +86,32 @@ def provider_format(file_name):
 
 def write_readme(path, manifest, raw_base_url):
     lines = [
-        "# RuleList Artifacts",
+        "# RuleList 规则产物",
         "",
-        f"Generated at: `{manifest['generated_at']}`",
+        f"生成时间：`{manifest['generated_at']}`",
         "",
-        "## Artifacts",
+        "## 产物列表",
         "",
     ]
 
     for task_name, item in manifest["artifacts"].items():
         lines.append(f"### {task_name}")
         lines.append("")
-        lines.append(f"- Behavior: `{item['behavior']}`")
-        lines.append(f"- Sources: `{len(item['sources'])}`")
+        lines.append(f"- 规则类型：`{item['behavior']}`")
+        lines.append(f"- 来源数量：`{len(item['sources'])}`")
         for file_info in item["files"]:
             raw_url = f"{raw_base_url.rstrip('/')}/{file_info['path']}"
             if file_info["lines"] is None:
-                lines.append(f"- `{file_info['path']}`: {file_info['bytes']} bytes, {raw_url}")
+                lines.append(f"- `{file_info['path']}`：{file_info['bytes']} 字节，{raw_url}")
             else:
                 lines.append(
-                    f"- `{file_info['path']}`: {file_info['lines']} lines, {file_info['bytes']} bytes, {raw_url}"
+                    f"- `{file_info['path']}`：{file_info['lines']} 行，{file_info['bytes']} 字节，{raw_url}"
                 )
         lines.append("")
 
     lines.extend(
         [
-            "## Mihomo rule-providers",
+            "## Mihomo rule-providers 配置",
             "",
             "```yaml",
             "rule-providers:",

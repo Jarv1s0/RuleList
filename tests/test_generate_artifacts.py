@@ -54,6 +54,9 @@ class GenerateArtifactsTest(unittest.TestCase):
 
         self.assertIn("format: mrs", content)
         self.assertIn("https://raw.example/rules/ad.mrs", content)
+        self.assertIn("# RuleList 规则产物", content)
+        self.assertIn("## 产物列表", content)
+        self.assertIn("规则类型", content)
 
 
 if __name__ == "__main__":

@@ -49,11 +49,15 @@ class GenerateArtifactsTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             readme_path = Path(tmp) / "README.md"
-            write_readme(readme_path, manifest, "https://raw.example/rules")
+            write_readme(
+                readme_path,
+                manifest,
+                "https://github.com/example/RuleList/raw/release/rules",
+            )
             content = readme_path.read_text(encoding="utf-8")
 
         self.assertIn("format: mrs", content)
-        self.assertIn("https://raw.example/rules/ad.mrs", content)
+        self.assertIn("https://github.com/example/RuleList/raw/release/rules/ad.mrs", content)
         self.assertIn("# RuleList 规则产物", content)
         self.assertIn("## 产物列表", content)
         self.assertIn("规则类型", content)

@@ -110,7 +110,7 @@ if [ -z "$raw_base_url" ] || [ "$raw_base_url" == "null" ]; then
     origin_url=$(git config --get remote.origin.url || true)
     repo_path=$(echo "$origin_url" | sed -E 's#^git@github.com:##; s#^https://github.com/##; s#\.git$##')
     if [[ "$repo_path" == */* ]]; then
-        raw_base_url="https://raw.githubusercontent.com/${repo_path}/${publish_branch}/${rules_dir}"
+        raw_base_url="https://github.com/${repo_path}/raw/${publish_branch}/${rules_dir}"
     else
         raw_base_url="${rules_dir}"
     fi

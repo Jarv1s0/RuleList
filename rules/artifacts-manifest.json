@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-11T11:14:34+08:00",
+  "publish": {
+    "branch": "release",
+    "rules_dir": "rules"
+  },
+  "artifacts": {
+    "SteamCN": {
+      "behavior": "domain",
+      "format": "mrs",
+      "sources": [
+        "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geosite/steam@cn.list",
+        "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list",
+        "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/SteamCN/SteamCN.yaml"
+      ],
+      "files": [
+        {
+          "path": "SteamCN.txt",
+          "bytes": 616,
+          "lines": 26,
+          "sha256": "ec333b69b875988b05bb426738c28e16401852321475ff8636311daaf780178d"
+        },
+        {
+          "path": "SteamCN.mrs",
+          "bytes": 497,
+          "lines": null,
+          "sha256": "e705fad3c09d10492b2f56cb446aa46f8c1efa58abcd89c7d53220e436961ef1"
+        }
+      ],
+      "empty": false
+    },
+    "ad": {
+      "behavior": "domain",
+      "format": "mrs",
+      "sources": [
+        "https://github.com/privacy-protection-tools/anti-AD/raw/refs/heads/master/anti-ad-clash.yaml",
+        "https://github.com/Cats-Team/AdRules/raw/refs/heads/main/adrules_domainset.txt",
+        "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-httpdns-cn@ads.list",
+        "https://github.com/ignaciocastro/a-dove-is-dumb/raw/refs/heads/main/pihole.txt"
+      ],
+      "files": [
+        {
+          "path": "ad.txt",
+          "bytes": 4409362,
+          "lines": 198646,
+          "sha256": "248a6757aaf52006569ddbf6edefe142f96da10caf4fd68ceae4d78ed0324468"
+        },
+        {
+          "path": "ad.mrs",
+          "bytes": 1837021,
+          "lines": null,
+          "sha256": "2ca35440454265d37052aa579733ed043bd2d635db10d2f17486660d749ed5dc"
+        }
+      ],
+      "empty": false
+    },
+    "cnIP": {
+      "behavior": "ipcidr",
+      "format": "mrs",
+      "sources": [
+        "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/cn.list",
+        "https://github.com/MetaCubeX/meta-rules-dat/raw/meta/geo/geoip/private.list"
+      ],
+      "files": [
+        {
+          "path": "cnIP.txt",
+          "bytes": 140328,
+          "lines": 8687,
+          "sha256": "238db478d072526f006a54cb0533104d6d2bf9a8100f9f262cf07998b6c15452"
+        },
+        {
+          "path": "cnIP.mrs",
+          "bytes": 36707,
+          "lines": null,
+          "sha256": "ede293a2daba6dadccf293ecc1bee40261b13b91c9285df4b10f05a93d29066e"
+        }
+      ],
+      "empty": false
+    }
+  }
+}

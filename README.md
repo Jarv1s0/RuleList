@@ -13,22 +13,12 @@
 发布说明和索引：
 
 - [`README.md`](https://github.com/Jarv1s0/RuleList/blob/release/README.md)
-- [`artifacts-manifest.json`](https://github.com/Jarv1s0/RuleList/blob/release/artifacts-manifest.json)
+- [`manifest.json`](https://github.com/Jarv1s0/RuleList/blob/release/manifest.json)
 
 Raw URL 示例：
 
 ```text
 https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.mrs
-```
-
-## 当前规则集
-
-```text
-名称      类型      说明
-------    ------    ------------------------------
-ad        domain    广告过滤规则
-SteamCN   domain    Steam 中国区及相关游戏下载域名
-cnIP      ipcidr    中国大陆 IP 与私有 IP 网段
 ```
 
 ## 主分支文件
@@ -37,7 +27,7 @@ cnIP      ipcidr    中国大陆 IP 与私有 IP 网段
 .
 |-- .github/workflows/mrs.yml  GitHub Actions 工作流
 |-- config.yaml                规则源、发布分支和 Mihomo 下载配置
-|-- scripts/generate_artifacts.py
+|-- scripts/release.py
 |                               生成 release README 和 manifest
 |-- start.sh                   主构建脚本
 |-- LICENSE
@@ -61,7 +51,7 @@ cnIP      ipcidr    中国大陆 IP 与私有 IP 网段
 3. 下载 Mihomo release 二进制并校验 SHA-256
 4. 下载并清洗 `config.yaml` 中配置的规则源
 5. 生成 `*.txt` 和 `*.mrs`
-6. 生成 release 根目录的 `README.md` 和 `artifacts-manifest.json`
+6. 生成 release 根目录的 `README.md` 和 `manifest.json`
 7. 将产物提交并推送到 `release` 分支
 
 ## 配置说明

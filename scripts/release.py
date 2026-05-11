@@ -167,7 +167,7 @@ def main():
     raw_base_url = os.environ["RAW_BASE_URL"]
 
     manifest = build_manifest(config, output_dir, publish_branch, rules_dir)
-    (output_dir / "artifacts-manifest.json").write_text(
+    (output_dir / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",

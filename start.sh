@@ -394,7 +394,7 @@ echo "---------------------------------------"
 echo "正在生成产物清单和使用说明..."
 CONFIG_JSON=$(yq -o=json '.' "$config_file")
 export CONFIG_JSON OUTPUT_DIR="$output_dir" PUBLISH_BRANCH="$publish_branch" RULES_DIR="$rules_dir" RAW_BASE_URL="$raw_base_url"
-python3 scripts/generate_artifacts.py
+python3 scripts/release.py
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
@@ -410,7 +410,7 @@ copy_rule_outputs() {
     target_dir="$1"
     find "$output_dir" -maxdepth 1 -type f \
         ! -name "README.md" \
-        ! -name "artifacts-manifest.json" \
+        ! -name "manifest.json" \
         -exec cp {} "$target_dir/" \;
 }
 
@@ -447,12 +447,13 @@ mkdir -p "$deploy_target"
 find "$deploy_target" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 copy_rule_outputs "$deploy_target"
 cp "$output_dir/README.md" "$publish_worktree/README.md"
-cp "$output_dir/artifacts-manifest.json" "$publish_worktree/artifacts-manifest.json"
+rm -f "$publish_worktree/artifacts-manifest.json"
+cp "$output_dir/manifest.json" "$publish_worktree/manifest.json"
 
 (
     cd "$publish_worktree"
     echo "正在准备 Git 提交..."
-    git add "$rules_dir" README.md artifacts-manifest.json
+    git add "$rules_dir" README.md manifest.json artifacts-manifest.json
 
     if git diff --staged --quiet; then
         echo "规则无变化，跳过提交和推送。"

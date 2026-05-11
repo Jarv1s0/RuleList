@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-11T11:58:19+08:00",
+  "generated_at": "2026-05-11T12:01:50+08:00",
+  "generated_at_display": "2026-05-11 12:01:50（北京时间 UTC+08:00）",
   "publish": {
     "branch": "release",
     "rules_dir": "rules"

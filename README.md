@@ -1,29 +1,29 @@
 # RuleList 规则产物
 
-生成时间：`2026-05-11T11:44:45+08:00`
+生成时间：`2026-05-11T11:52:39+08:00`
 
 ## 产物列表
 
 ### SteamCN
 
-- 规则类型：`domain`
-- 来源数量：`3`
-- `SteamCN.txt`：26 行，616 字节，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.txt
-- `SteamCN.mrs`：497 字节，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.mrs
+- Behavior: `domain`
+- Sources: `3`
+- `SteamCN.txt`：26 lines，616 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.txt
+- `SteamCN.mrs`：497 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.mrs
 
 ### ad
 
-- 规则类型：`domain`
-- 来源数量：`4`
-- `ad.txt`：198646 行，4409362 字节，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
-- `ad.mrs`：1837021 字节，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
+- Behavior: `domain`
+- Sources: `4`
+- `ad.txt`：198646 lines，4409362 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
+- `ad.mrs`：1837021 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
 
 ### cnIP
 
-- 规则类型：`ipcidr`
-- 来源数量：`2`
-- `cnIP.txt`：8687 行，140328 字节，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.txt
-- `cnIP.mrs`：36707 字节，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.mrs
+- Behavior: `ipcidr`
+- Sources: `2`
+- `cnIP.txt`：8687 lines，140328 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.txt
+- `cnIP.mrs`：36707 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.mrs
 
 ## Mihomo rule-providers 配置
 

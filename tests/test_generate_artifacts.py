@@ -60,7 +60,10 @@ class GenerateArtifactsTest(unittest.TestCase):
         self.assertIn("https://github.com/example/RuleList/raw/release/rules/ad.mrs", content)
         self.assertIn("# RuleList 规则产物", content)
         self.assertIn("## 产物列表", content)
-        self.assertIn("规则类型", content)
+        self.assertIn("Behavior", content)
+        self.assertIn("Sources", content)
+        self.assertIn("1 lines，12 bytes", content)
+        self.assertIn("3 bytes", content)
 
 
 if __name__ == "__main__":

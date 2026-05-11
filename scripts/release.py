@@ -30,31 +30,21 @@ def format_list(value):
 
 
 def artifact_files(output_dir, task_name, rule_format):
-    files = []
-    txt_path = output_dir / f"{task_name}.txt"
-    if txt_path.exists():
-        files.append(txt_path)
-
+    files = [output_dir / f"{task_name}.txt"]
     if "mrs" in str(rule_format).split(","):
-        mrs_path = output_dir / f"{task_name}.mrs"
-        if mrs_path.exists():
-            files.append(mrs_path)
-    return files
+        files.append(output_dir / f"{task_name}.mrs")
+    return [path for path in files if path.exists()]
 
 
 def format_generated_at_display(generated_at, timezone_name):
     offset = generated_at.strftime("%z")
-    if offset:
-        offset = f"UTC{offset[:3]}:{offset[3:]}"
-    else:
-        offset = "本地时区"
-
+    offset_label = f"UTC{offset[:3]}:{offset[3:]}" if offset else "本地时区"
     if timezone_name == "Asia/Shanghai":
-        timezone_label = f"北京时间 {offset}"
+        timezone_label = f"北京时间 {offset_label}"
     elif timezone_name:
-        timezone_label = f"{timezone_name} {offset}"
+        timezone_label = f"{timezone_name} {offset_label}"
     else:
-        timezone_label = offset
+        timezone_label = offset_label
 
     return f"{generated_at:%Y-%m-%d %H:%M:%S}（{timezone_label}）"
 
@@ -104,6 +94,7 @@ def provider_format(file_name):
 
 
 def write_readme(path, manifest, raw_base_url):
+    raw_base_url = raw_base_url.rstrip("/")
     lines = [
         "# RuleList 规则产物",
         "",
@@ -119,7 +110,7 @@ def write_readme(path, manifest, raw_base_url):
         lines.append(f"- Behavior: `{item['behavior']}`")
         lines.append(f"- Sources: `{len(item['sources'])}`")
         for file_info in item["files"]:
-            raw_url = f"{raw_base_url.rstrip('/')}/{file_info['path']}"
+            raw_url = f"{raw_base_url}/{file_info['path']}"
             if file_info["lines"] is None:
                 lines.append(f"- `{file_info['path']}`：{file_info['bytes']} bytes，{raw_url}")
             else:
@@ -142,14 +133,13 @@ def write_readme(path, manifest, raw_base_url):
         selected = mrs_file or (item["files"][0] if item["files"] else None)
         if selected is None:
             continue
-        raw_url = f"{raw_base_url.rstrip('/')}/{selected['path']}"
         lines.extend(
             [
                 f"  {task_name}:",
                 "    type: http",
                 f"    behavior: {item['behavior']}",
                 f"    format: {provider_format(selected['path'])}",
-                f"    url: \"{raw_url}\"",
+                f"    url: \"{raw_base_url}/{selected['path']}\"",
                 f"    path: ./ruleset/{selected['path']}",
                 "    interval: 86400",
             ]

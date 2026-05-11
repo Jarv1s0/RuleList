@@ -42,11 +42,30 @@ def artifact_files(output_dir, task_name, rule_format):
     return files
 
 
+def format_generated_at_display(generated_at, timezone_name):
+    offset = generated_at.strftime("%z")
+    if offset:
+        offset = f"UTC{offset[:3]}:{offset[3:]}"
+    else:
+        offset = "本地时区"
+
+    if timezone_name == "Asia/Shanghai":
+        timezone_label = f"北京时间 {offset}"
+    elif timezone_name:
+        timezone_label = f"{timezone_name} {offset}"
+    else:
+        timezone_label = offset
+
+    return f"{generated_at:%Y-%m-%d %H:%M:%S}（{timezone_label}）"
+
+
 def build_manifest(config, output_dir, publish_branch, rules_dir):
-    generated_at = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    generated_at = datetime.now(timezone.utc).astimezone()
+    timezone_name = (config.get("git") or {}).get("timezone", "")
     manifest = {
         "schema_version": 1,
-        "generated_at": generated_at,
+        "generated_at": generated_at.isoformat(timespec="seconds"),
+        "generated_at_display": format_generated_at_display(generated_at, timezone_name),
         "publish": {
             "branch": publish_branch,
             "rules_dir": rules_dir,
@@ -88,7 +107,7 @@ def write_readme(path, manifest, raw_base_url):
     lines = [
         "# RuleList 规则产物",
         "",
-        f"生成时间：`{manifest['generated_at']}`",
+        f"生成时间：{manifest['generated_at_display']}",
         "",
         "## 产物列表",
         "",

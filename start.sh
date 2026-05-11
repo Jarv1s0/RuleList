@@ -98,12 +98,12 @@ publish_branch=$(yq -r '.publish.branch // ""' "$config_file")
 rules_dir=$(yq -r '.publish.rules_dir // "rules"' "$config_file")
 raw_base_url=$(yq -r '.publish.raw_base_url // ""' "$config_file")
 
-if [ -z "$publish_branch" ] || [ "$publish_branch" == "null" ]; then
-    publish_branch=$(git rev-parse --abbrev-ref HEAD)
-fi
-
 if [ -z "$rules_dir" ] || [ "$rules_dir" == "null" ]; then
     rules_dir="rules"
+fi
+
+if [ -z "$publish_branch" ] || [ "$publish_branch" == "null" ]; then
+    publish_branch="release"
 fi
 
 if [ -z "$raw_base_url" ] || [ "$raw_base_url" == "null" ]; then
@@ -400,45 +400,23 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 echo "开始部署规则到分支: $publish_branch，目录: $rules_dir"
 
+if [ "$publish_branch" == "$current_branch" ]; then
+    echo "错误: publish.branch 不能等于当前源码分支，否则会覆盖源码分支根目录 README.md。"
+    echo "请将 publish.branch 配置为单独的发布分支，例如 release。"
+    exit 1
+fi
+
+copy_rule_outputs() {
+    target_dir="$1"
+    find "$output_dir" -maxdepth 1 -type f \
+        ! -name "README.md" \
+        ! -name "artifacts-manifest.json" \
+        -exec cp {} "$target_dir/" \;
+}
+
 if [ -n "$GITHUB_TOKEN" ]; then
     git config --global user.name "$(yq -r '.git.user_name' "$config_file")"
     git config --global user.email "$(yq -r '.git.user_email' "$config_file")"
-fi
-
-if [ "$publish_branch" == "$current_branch" ]; then
-    # 确保 rules 目录存在并清理旧内容
-    mkdir -p "$rules_dir"
-    find "$rules_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
-    # 复制新规则
-    cp -r "$output_dir"/* "$rules_dir/"
-
-    echo "正在准备 Git 提交..."
-    git add "$rules_dir"
-
-    if git diff --staged --quiet; then
-        echo "规则无变化，跳过提交和推送。"
-        exit 0
-    fi
-
-    git commit -m "Auto Update Rules: $(date '+%Y-%m-%d %H:%M:%S')"
-
-    commit_count=$(git rev-list --count HEAD)
-    echo "当前分支提交数量: $commit_count"
-
-    # 注意：这里暂不自动执行 --orphan 重置，以保护主分支代码历史。
-    # 如果用户确实需要清理主分支历史，建议手动执行或通过专门的清理脚本。
-
-    if [ -n "$GITHUB_TOKEN" ]; then
-        origin_url=$(git remote get-url origin)
-        auth_url=$(echo "$origin_url" | sed "s/https:\/\//https:\/\/x-access-token:$GITHUB_TOKEN@/")
-        git remote set-url origin "$auth_url"
-    fi
-
-    echo "正在推送到 GitHub 分支: $current_branch"
-    git push origin "$current_branch"
-    echo "部署完成！"
-    exit 0
 fi
 
 publish_worktree=$(mktemp -d)
@@ -467,12 +445,14 @@ fi
 deploy_target="$publish_worktree/$rules_dir"
 mkdir -p "$deploy_target"
 find "$deploy_target" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-cp -r "$output_dir"/* "$deploy_target/"
+copy_rule_outputs "$deploy_target"
+cp "$output_dir/README.md" "$publish_worktree/README.md"
+cp "$output_dir/artifacts-manifest.json" "$publish_worktree/artifacts-manifest.json"
 
 (
     cd "$publish_worktree"
     echo "正在准备 Git 提交..."
-    git add "$rules_dir"
+    git add "$rules_dir" README.md artifacts-manifest.json
 
     if git diff --staged --quiet; then
         echo "规则无变化，跳过提交和推送。"

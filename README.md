@@ -23,7 +23,7 @@
 - 纯文本规则文件 `*.txt`
 - Mihomo Rule Set 格式文件 `*.mrs`
 
-同时会生成：
+发布分支根目录会生成：
 
 - `artifacts-manifest.json`：记录每个规则集的行为类型、来源、文件大小、行数和 SHA-256。
 - `README.md`：提供产物列表和可复制的 Mihomo `rule-providers` 配置。
@@ -33,6 +33,8 @@
 - `branch`：产物发布分支，默认使用 `release`
 - `rules_dir`：产物目录，默认使用 `rules`
 - `raw_base_url`：生成 README 时使用的 Raw URL 前缀
+
+为保持源码分支文档和发布分支文档互不覆盖，`publish.branch` 不能配置为当前源码分支。
 
 ## 当前配置的规则集
 

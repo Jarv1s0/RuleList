@@ -2,6 +2,12 @@
 work_dir: "./tmp"
 output_dir: "./out"
 
+# 发布配置
+publish:
+  branch: "release"
+  rules_dir: "rules"
+  raw_base_url: "https://raw.githubusercontent.com/Jarv1s0/RuleList/release/rules"
+
 # Mihomo 配置
 mihomo:
   api_url: "https://api.github.com/repos/MetaCubeX/mihomo/releases"

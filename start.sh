@@ -8,7 +8,7 @@ if [ ! -f "$config_file" ]; then
 fi
 
 # 检查必要命令是否存在
-for cmd in yq jq curl wget gunzip sha256sum; do
+for cmd in yq jq curl wget gunzip sha256sum git python3 mktemp; do
     if ! command -v $cmd &> /dev/null; then
         echo "错误: 系统未安装 $cmd，请先安装。"
         exit 1
@@ -93,6 +93,28 @@ echo "Mihomo 已就绪: $work_dir/mihomo"
 output_dir=$(yq -r '.output_dir' "$config_file")
 rm -rf "$output_dir" || true
 mkdir -p "$output_dir"
+
+publish_branch=$(yq -r '.publish.branch // ""' "$config_file")
+rules_dir=$(yq -r '.publish.rules_dir // "rules"' "$config_file")
+raw_base_url=$(yq -r '.publish.raw_base_url // ""' "$config_file")
+
+if [ -z "$publish_branch" ] || [ "$publish_branch" == "null" ]; then
+    publish_branch=$(git rev-parse --abbrev-ref HEAD)
+fi
+
+if [ -z "$rules_dir" ] || [ "$rules_dir" == "null" ]; then
+    rules_dir="rules"
+fi
+
+if [ -z "$raw_base_url" ] || [ "$raw_base_url" == "null" ]; then
+    origin_url=$(git config --get remote.origin.url || true)
+    repo_path=$(echo "$origin_url" | sed -E 's#^git@github.com:##; s#^https://github.com/##; s#\.git$##')
+    if [[ "$repo_path" == */* ]]; then
+        raw_base_url="https://raw.githubusercontent.com/${repo_path}/${publish_branch}/${rules_dir}"
+    else
+        raw_base_url="${rules_dir}"
+    fi
+fi
 
 echo "开始处理任务..."
 # 遍历 tasks 下的所有键名
@@ -369,45 +391,106 @@ echo "---------------------------------------"
 echo "所有任务处理完成！"
 echo "---------------------------------------"
 
-rules_dir="rules"
+echo "正在生成产物清单和使用说明..."
+CONFIG_JSON=$(yq -o=json '.' "$config_file")
+export CONFIG_JSON OUTPUT_DIR="$output_dir" PUBLISH_BRANCH="$publish_branch" RULES_DIR="$rules_dir" RAW_BASE_URL="$raw_base_url"
+python3 scripts/generate_artifacts.py
 
-echo "开始部署规则到本地目录: $rules_dir"
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+echo "开始部署规则到分支: $publish_branch，目录: $rules_dir"
 
 if [ -n "$GITHUB_TOKEN" ]; then
     git config --global user.name "$(yq -r '.git.user_name' "$config_file")"
     git config --global user.email "$(yq -r '.git.user_email' "$config_file")"
 fi
 
-# 确保 rules 目录存在并清理旧内容
-mkdir -p "$rules_dir"
-find "$rules_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+if [ "$publish_branch" == "$current_branch" ]; then
+    # 确保 rules 目录存在并清理旧内容
+    mkdir -p "$rules_dir"
+    find "$rules_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
-# 复制新规则
-cp -r "$output_dir"/* "$rules_dir/"
+    # 复制新规则
+    cp -r "$output_dir"/* "$rules_dir/"
 
-echo "正在准备 Git 提交..."
-git add "$rules_dir"
+    echo "正在准备 Git 提交..."
+    git add "$rules_dir"
 
-if git diff --staged --quiet; then
-    echo "规则无变化，跳过提交和推送。"
+    if git diff --staged --quiet; then
+        echo "规则无变化，跳过提交和推送。"
+        exit 0
+    fi
+
+    git commit -m "Auto Update Rules: $(date '+%Y-%m-%d %H:%M:%S')"
+
+    commit_count=$(git rev-list --count HEAD)
+    echo "当前分支提交数量: $commit_count"
+
+    # 注意：这里暂不自动执行 --orphan 重置，以保护主分支代码历史。
+    # 如果用户确实需要清理主分支历史，建议手动执行或通过专门的清理脚本。
+
+    if [ -n "$GITHUB_TOKEN" ]; then
+        origin_url=$(git remote get-url origin)
+        auth_url=$(echo "$origin_url" | sed "s/https:\/\//https:\/\/x-access-token:$GITHUB_TOKEN@/")
+        git remote set-url origin "$auth_url"
+    fi
+
+    echo "正在推送到 GitHub 分支: $current_branch"
+    git push origin "$current_branch"
+    echo "部署完成！"
     exit 0
 fi
 
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-git commit -m "Auto Update Rules: $(date '+%Y-%m-%d %H:%M:%S')"
+publish_worktree=$(mktemp -d)
+cleanup_publish_worktree() {
+    if [ -n "$publish_worktree" ] && [ -d "$publish_worktree" ]; then
+        git worktree remove --force "$publish_worktree" >/dev/null 2>&1 || true
+        rm -rf "$publish_worktree" >/dev/null 2>&1 || true
+    fi
+}
+trap cleanup_publish_worktree EXIT
 
-commit_count=$(git rev-list --count HEAD)
-echo "当前分支提交数量: $commit_count"
+git worktree prune
+git fetch origin "$publish_branch" || true
 
-# 注意：这里暂不自动执行 --orphan 重置，以保护主分支代码历史。
-# 如果用户确实需要清理主分支历史，建议手动执行或通过专门的清理脚本。
-
-if [ -n "$GITHUB_TOKEN" ]; then
-    origin_url=$(git remote get-url origin)
-    auth_url=$(echo "$origin_url" | sed "s/https:\/\//https:\/\/x-access-token:$GITHUB_TOKEN@/")
-    git remote set-url origin "$auth_url"
+if git show-ref --verify --quiet "refs/remotes/origin/$publish_branch"; then
+    git worktree add -B "$publish_branch" "$publish_worktree" "origin/$publish_branch"
+else
+    git worktree add --detach "$publish_worktree"
+    (
+        cd "$publish_worktree"
+        git checkout --orphan "$publish_branch"
+        git rm -rf . >/dev/null 2>&1 || true
+    )
 fi
 
-echo "正在推送到 GitHub 分支: $current_branch"
-git push origin "$current_branch"
+deploy_target="$publish_worktree/$rules_dir"
+mkdir -p "$deploy_target"
+find "$deploy_target" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+cp -r "$output_dir"/* "$deploy_target/"
+
+(
+    cd "$publish_worktree"
+    echo "正在准备 Git 提交..."
+    git add "$rules_dir"
+
+    if git diff --staged --quiet; then
+        echo "规则无变化，跳过提交和推送。"
+        exit 0
+    fi
+
+    git commit -m "Auto Update Rules: $(date '+%Y-%m-%d %H:%M:%S')"
+
+    if [ -n "$GITHUB_TOKEN" ]; then
+        origin_url=$(git remote get-url origin)
+        auth_url=$(echo "$origin_url" | sed "s/https:\/\//https:\/\/x-access-token:$GITHUB_TOKEN@/")
+        git remote set-url origin "$auth_url"
+    fi
+
+    echo "正在推送到 GitHub 分支: $publish_branch"
+    git push origin "$publish_branch"
+)
+
+git worktree remove --force "$publish_worktree"
+trap - EXIT
 echo "部署完成！"

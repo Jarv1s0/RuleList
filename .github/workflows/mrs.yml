@@ -10,6 +10,8 @@ on:
       - ".github/workflows/mrs.yml"
       - "config.yaml"
       - "start.sh"
+      - "scripts/**"
+      - "tests/**"
 
 jobs:
   update:
@@ -24,6 +26,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 安装依赖
         env:
@@ -33,6 +37,10 @@ jobs:
           sudo apt-get install -y bash curl jq wget gzip coreutils python3 ca-certificates
           sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
           sudo chmod +x /usr/local/bin/yq
+
+      - name: 运行测试
+        run: |
+          python3 -m unittest discover -s tests
 
       - name: 运行脚本
         run: |

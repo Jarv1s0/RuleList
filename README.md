@@ -11,15 +11,28 @@
 |-- README.md
 |-- config.yaml   # 配置文件
 |-- rules/        # 已生成的规则产物
+|-- scripts/      # 辅助脚本
+|-- tests/        # 测试用例
 `-- start.sh      # 主脚本
 ```
 
 ## 输出文件
 
-每个任务会在当前仓库分支的 `rules/` 目录下生成两类文件：
+每个任务会在发布分支的 `rules/` 目录下生成两类文件：
 
 - 纯文本规则文件 `*.txt`
 - Mihomo Rule Set 格式文件 `*.mrs`
+
+同时会生成：
+
+- `artifacts-manifest.json`：记录每个规则集的行为类型、来源、文件大小、行数和 SHA-256。
+- `README.md`：提供产物列表和可复制的 Mihomo `rule-providers` 配置。
+
+默认发布配置位于 [config.yaml](config.yaml) 的 `publish` 节点下：
+
+- `branch`：产物发布分支，默认使用 `release`
+- `rules_dir`：产物目录，默认使用 `rules`
+- `raw_base_url`：生成 README 时使用的 Raw URL 前缀
 
 ## 当前配置的规则集
 
@@ -55,8 +68,9 @@
 3. 下载各任务配置的远程规则源
 4. 清洗、转换、重写、排除并去重规则
 5. 输出 `txt` 文件，并按需转换为 `mrs` 文件
-6. 将结果同步到 `rules/` 目录
-7. 当规则内容发生变化时，自动提交并推送当前分支
+6. 生成 `artifacts-manifest.json` 和规则使用说明
+7. 将结果同步到发布分支的 `rules/` 目录
+8. 当规则内容发生变化时，自动提交并推送发布分支
 
 ## 配置说明
 

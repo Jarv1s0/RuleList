@@ -1,6 +1,6 @@
 # RuleList 规则产物
 
-生成时间：2026-06-22 04:59:16（北京时间 UTC+08:00）
+生成时间：2026-06-23 05:49:48（北京时间 UTC+08:00）
 
 ## 产物列表
 
@@ -8,15 +8,15 @@
 
 - Behavior: `domain`
 - Sources: `3`
-- `SteamCN.txt`：26 lines，616 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.txt
-- `SteamCN.mrs`：497 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.mrs
+- `SteamCN.txt`：28 lines，645 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.txt
+- `SteamCN.mrs`：515 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/SteamCN.mrs
 
 ### ad
 
 - Behavior: `domain`
 - Sources: `4`
-- `ad.txt`：193613 lines，4293097 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
-- `ad.mrs`：1791359 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
+- `ad.txt`：193295 lines，4285402 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
+- `ad.mrs`：1789067 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
 
 ### cnIP
 

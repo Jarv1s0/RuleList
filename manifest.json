@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-22T04:59:16+08:00",
-  "generated_at_display": "2026-06-22 04:59:16（北京时间 UTC+08:00）",
+  "generated_at": "2026-06-23T05:49:48+08:00",
+  "generated_at_display": "2026-06-23 05:49:48（北京时间 UTC+08:00）",
   "publish": {
     "branch": "release",
     "rules_dir": "rules"
@@ -18,15 +18,15 @@
       "files": [
         {
           "path": "SteamCN.txt",
-          "bytes": 616,
-          "lines": 26,
-          "sha256": "ec333b69b875988b05bb426738c28e16401852321475ff8636311daaf780178d"
+          "bytes": 645,
+          "lines": 28,
+          "sha256": "673608251414518a0572f9e56a3fb9bd569eb5ccfe758ef6b9f7018487e7a77d"
         },
         {
           "path": "SteamCN.mrs",
-          "bytes": 497,
+          "bytes": 515,
           "lines": null,
-          "sha256": "e705fad3c09d10492b2f56cb446aa46f8c1efa58abcd89c7d53220e436961ef1"
+          "sha256": "50f03bac0984a732b3d76c41bcb42ef11d415ad0699c37fa2ee20b5d4c68bb62"
         }
       ],
       "empty": false
@@ -43,15 +43,15 @@
       "files": [
         {
           "path": "ad.txt",
-          "bytes": 4293097,
-          "lines": 193613,
-          "sha256": "5c702e55b7b0d9dcbe3f21a01f2330ee91cad9fb49fc41072bd4df68e7fb8199"
+          "bytes": 4285402,
+          "lines": 193295,
+          "sha256": "cda87d72c3687f680cb0bb510de522fdca8a6db38efd3f3a2db979927cc61d8e"
         },
         {
           "path": "ad.mrs",
-          "bytes": 1791359,
+          "bytes": 1789067,
           "lines": null,
-          "sha256": "f4fa4e24742cc17cd8b3c18307d0188c4108160f24f19c778e23beb2e91b68c9"
+          "sha256": "34863bb3763c2c26ce8ff02522894d1b4e63d3bd6932acf14ee43b75fed08967"
         }
       ],
       "empty": false

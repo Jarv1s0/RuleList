@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-26T05:18:39+08:00",
-  "generated_at_display": "2026-06-26 05:18:39（北京时间 UTC+08:00）",
+  "generated_at": "2026-06-27T05:09:11+08:00",
+  "generated_at_display": "2026-06-27 05:09:11（北京时间 UTC+08:00）",
   "publish": {
     "branch": "release",
     "rules_dir": "rules"
@@ -43,15 +43,15 @@
       "files": [
         {
           "path": "ad.txt",
-          "bytes": 4305604,
-          "lines": 194255,
-          "sha256": "9d56581e8b468b84ae0dd9f5e70a4a8bc7659948a0cf74fd03018effdeea0027"
+          "bytes": 4312296,
+          "lines": 194572,
+          "sha256": "9f92d3a0b49159e876fec85c6b4a525061d72d7dc59fe629a9ae01576ce8601e"
         },
         {
           "path": "ad.mrs",
-          "bytes": 1796171,
+          "bytes": 1799183,
           "lines": null,
-          "sha256": "ebc2fcfb8a6ae5e353322df81a46e373e9d754074f6648388c64f413195a0701"
+          "sha256": "754b12f6c8fa6a21d9a3e3ac668a1331876eb6f80bbd943b413a0df5e3804237"
         }
       ],
       "empty": false
@@ -66,15 +66,15 @@
       "files": [
         {
           "path": "cnIP.txt",
-          "bytes": 93592,
-          "lines": 5779,
-          "sha256": "68ac23feb648cff8ff63d6ad9641e2e951570f0a0ba75633a0f30363da283af6"
+          "bytes": 92937,
+          "lines": 5747,
+          "sha256": "2e3f5aa83122b150d5fdb571056cdfb44454e3799e71e615023379b26453088e"
         },
         {
           "path": "cnIP.mrs",
-          "bytes": 26601,
+          "bytes": 26663,
           "lines": null,
-          "sha256": "63a10549a1584791c6944355578632bb78e851c51f0263f28385d5614ddcf818"
+          "sha256": "72e345c3b4cccb30dd9e89614a8298898ba34c76ad474053ed391e64e626fc11"
         }
       ],
       "empty": false

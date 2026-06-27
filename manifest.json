@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-27T05:09:11+08:00",
-  "generated_at_display": "2026-06-27 05:09:11（北京时间 UTC+08:00）",
+  "generated_at": "2026-06-28T04:43:39+08:00",
+  "generated_at_display": "2026-06-28 04:43:39（北京时间 UTC+08:00）",
   "publish": {
     "branch": "release",
     "rules_dir": "rules"
@@ -43,15 +43,15 @@
       "files": [
         {
           "path": "ad.txt",
-          "bytes": 4312296,
-          "lines": 194572,
-          "sha256": "9f92d3a0b49159e876fec85c6b4a525061d72d7dc59fe629a9ae01576ce8601e"
+          "bytes": 4318595,
+          "lines": 194869,
+          "sha256": "0bafc342e8cacf0668d4e82d6c4da928b717ac5925fe446010492b6578a773d6"
         },
         {
           "path": "ad.mrs",
-          "bytes": 1799183,
+          "bytes": 1801357,
           "lines": null,
-          "sha256": "754b12f6c8fa6a21d9a3e3ac668a1331876eb6f80bbd943b413a0df5e3804237"
+          "sha256": "6abfc5eed0ca5116fa868799de501d4226b4e5a519d1b03a992dfa48e9f82ea5"
         }
       ],
       "empty": false

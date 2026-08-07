@@ -1,6 +1,6 @@
 # RuleList 规则产物
 
-生成时间：2026-08-07 08:48:58（北京时间 UTC+08:00）
+生成时间：2026-08-08 04:22:55（北京时间 UTC+08:00）
 
 ## 产物列表
 
@@ -15,15 +15,15 @@
 
 - Behavior: `domain`
 - Sources: `4`
-- `ad.txt`：200128 lines，4466184 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
-- `ad.mrs`：1854630 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
+- `ad.txt`：200350 lines，4470746 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
+- `ad.mrs`：1856128 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
 
 ### cnIP
 
 - Behavior: `ipcidr`
 - Sources: `2`
-- `cnIP.txt`：5840 lines，94856 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.txt
-- `cnIP.mrs`：27141 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.mrs
+- `cnIP.txt`：5832 lines，94734 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.txt
+- `cnIP.mrs`：27067 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/cnIP.mrs
 
 ## Mihomo rule-providers 配置
 

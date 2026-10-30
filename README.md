@@ -1,6 +1,6 @@
 # RuleList 规则产物
 
-生成时间：2026-10-30 07:36:45（北京时间 UTC+08:00）
+生成时间：2026-10-31 07:16:36（北京时间 UTC+08:00）
 
 ## 产物列表
 
@@ -15,8 +15,8 @@
 
 - Behavior: `domain`
 - Sources: `4`
-- `ad.txt`：224415 lines，5122570 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
-- `ad.mrs`：2107174 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
+- `ad.txt`：224772 lines，5130296 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.txt
+- `ad.mrs`：2109951 bytes，https://github.com/Jarv1s0/RuleList/raw/release/rules/ad.mrs
 
 ### cnIP
 
